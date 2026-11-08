@@ -11,6 +11,12 @@ function decodeBitArrays(data) {
     return data.map(bitArray => parseInt(bitArray.join(''), 2));
 }
 
+// Signed 8-bit value from one decoded byte (two's complement), e.g. Borealis
+// temperatures: 0xEE → -18.
+function toInt8(byte) {
+    return byte > 127 ? byte - 256 : byte;
+}
+
 function toBitArray(byte) {
     return [(byte >> 7) & 1, (byte >> 6) & 1, (byte >> 5) & 1, (byte >> 4) & 1,
             (byte >> 3) & 1, (byte >> 2) & 1, (byte >> 1) & 1, byte & 1];
@@ -110,7 +116,9 @@ const parsers = {
         const eco2 = (decoded[6] << 8) | decoded[7];
 
         mqtt.publish('local/airquality/temphumid', JSON.stringify({
-            tempInC: decoded[0], tempInF: decoded[1], humidity: parseFloat(humidity.toFixed(2))
+            // Borealis sends both temperature bytes as signed int8, so below
+            // 0 °C / 0 °F they must not be read as unsigned (−18 °C ≠ 238 °C).
+            tempInC: toInt8(decoded[0]), tempInF: toInt8(decoded[1]), humidity: parseFloat(humidity.toFixed(2))
         }));
         mqtt.publish('local/airquality/status', JSON.stringify({
             tvoc_ppb: tvoc, eco2_ppm: eco2
