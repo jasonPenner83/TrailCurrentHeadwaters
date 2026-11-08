@@ -342,6 +342,97 @@ function parseLightStatus(data, mqtt, canId) {
     }
 }
 
+// ── TPMS (0x046-0x04B) ──────────────────────────────────────────────
+// Wire format: TrailCurrent.dbc (TpmsWheelStatus ... TpmsLearnCandidate).
+// Wheel index 0-3 = left front, right front, left rear, right rear; the
+// position keys match trailer-diagram's "<axle><L|R>" slots.
+
+const TPMS_POSITIONS = ['0L', '0R', '1L', '1R'];
+const TPMS_ALARM_BITS = ['low_warn', 'low_crit', 'high', 'fast_leak',
+                         'temp_high', 'sensor_lost', 'batt_low', 'imbalance'];
+
+function tpmsInt8(byte) {
+    return byte > 127 ? byte - 256 : byte;
+}
+
+function tpmsAddress(bytes) {
+    if (bytes.every(b => b === 0)) return null;
+    return bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(':');
+}
+
+function parseTpmsWheel(data, mqtt) {
+    const d = decodeBitArrays(data);
+    const wheel = d[0];
+    if (wheel > 3) return;
+    const rawPsi = (d[1] << 8) | d[2];
+    const temp = tpmsInt8(d[3]);
+    const alarms = {};
+    TPMS_ALARM_BITS.forEach((name, bit) => { alarms[name] = (d[5] >> bit) & 1 ? true : false; });
+    mqtt.publish(`local/tpms/wheel/${wheel}`, JSON.stringify({
+        wheel,
+        position: TPMS_POSITIONS[wheel],
+        psi: rawPsi === 0xFFFF ? null : rawPsi / 10,
+        temp_c: temp === -128 ? null : temp,
+        battery_pct: d[4] === 255 ? null : d[4],
+        alarm_bits: d[5],
+        alarms,
+        seconds_since_seen: d[6],
+        sensor_type: d[7],
+        paired: d[7] !== 0
+    }));
+}
+
+function parseTpmsSummary(data, mqtt) {
+    const d = decodeBitArrays(data);
+    mqtt.publish('local/tpms/summary', JSON.stringify({
+        level: d[0],                // 0 ok, 1 warning, 2 critical
+        wheels_seen_mask: d[1],
+        wheels_alarm_mask: d[2],
+        target_psi: d[3]
+    }));
+}
+
+function parseTpmsConfig(data, mqtt) {
+    const d = decodeBitArrays(data);
+    mqtt.publish('local/tpms/config', JSON.stringify({
+        target_psi: d[0],
+        low_warn_pct: d[1],
+        low_crit_pct: d[2],
+        high_pct: d[3],
+        fast_leak_psi: d[4] / 10,
+        temp_high_c: tpmsInt8(d[5]),
+        lost_after_min: d[6],
+        imbalance_psi: d[7]
+    }));
+}
+
+function parseTpmsPairing(data, mqtt) {
+    const d = decodeBitArrays(data);
+    const wheel = d[0];
+    if (wheel > 3) return;
+    mqtt.publish(`local/tpms/pairing/${wheel}`, JSON.stringify({
+        wheel,
+        position: TPMS_POSITIONS[wheel],
+        address: tpmsAddress(d.slice(1, 7)),
+        learning: (d[7] & 0x01) === 1
+    }));
+}
+
+function parseTpmsLearnCandidate(data, mqtt) {
+    const d = decodeBitArrays(data);
+    mqtt.publish('local/tpms/candidate', JSON.stringify({
+        address: tpmsAddress(d.slice(0, 6)),
+        rssi_dbm: tpmsInt8(d[6]),
+        psi: d[7] === 255 ? null : d[7]
+    }));
+}
+
+parsers['0x046'] = parseTpmsWheel;
+parsers['0x047'] = parseTpmsSummary;
+parsers['0x048'] = parseTpmsConfig;
+parsers['0x04a'] = parseTpmsPairing;
+parsers['0x04b'] = parseTpmsLearnCandidate;
+
 // ── Inbound handler (called by MqttService.handleMessage) ───────────
 
 function handleCanInbound(payload, mqttClient) {
