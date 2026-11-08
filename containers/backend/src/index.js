@@ -20,6 +20,7 @@ const systemConfigRoutes = require('./routes/system-config');
 const modulesRoutes = require('./routes/modules');
 const otaRoutes = require('./routes/ota');
 const plateauRoutes = require('./routes/plateau');
+const tpmsRoutes = require('./routes/tpms');
 const smsRoutes = require('./routes/sms');
 const discoveryRoutes = require('./routes/discovery');
 const osRoutes = require('./routes/os');
@@ -88,6 +89,7 @@ async function startServer() {
         app.use('/api/modules', modulesRoutes(db));
         app.use('/api/ota', otaRoutes(db));
         app.use('/api/plateau', plateauRoutes(db));
+        app.use('/api/tpms', tpmsRoutes());
         app.use('/api/sms', smsRoutes(db));
         app.use('/api/discovery', discoveryRoutes(db));
         app.use('/api/os', osRoutes());

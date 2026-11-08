@@ -7,6 +7,7 @@ import { homePage } from './pages/home.js';
 import { trailerPage } from './pages/trailer.js';
 import { energyPage } from './pages/energy.js';
 import { waterPage } from './pages/water.js';
+import { tiresPage } from './pages/tires.js';
 import { airqualityPage } from './pages/airquality.js';
 import { settingsPage } from './pages/settings/index.js';
 import { loginPage } from './pages/login.js';
@@ -126,6 +127,7 @@ class App {
             .register('trailer', trailerPage)
             .register('energy', energyPage)
             .register('water', waterPage)
+            .register('tires', tiresPage)
             .register('airquality', airqualityPage)
             .register('map', mapPage)
             .register('trails', trailsPage)

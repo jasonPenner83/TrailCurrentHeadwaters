@@ -13,6 +13,7 @@ const MQTT_GPS = 'gps';
 const MQTT_RELAYS = 'relays';
 const MQTT_LEVEL = 'level';
 const MQTT_WATER = 'water';
+const MQTT_TPMS = 'tpms';
 const MQTT_DEPLOYMENT = 'deployment';
 const MQTT_MAPS = 'maps';
 // Playbill in-rig entertainment node — owns radio/livetv/transport state and
@@ -47,6 +48,8 @@ const TOPICS = {
     RELAY_STATUS: `${MQTT_ROOT}/${MQTT_RELAYS}/+/${MSG_STATUS}`,
     RELAY_ALL_COMMAND: `${MQTT_ROOT}/${MQTT_RELAYS}/all/${MSG_COMMAND}`,
     WATER_STATUS: `${MQTT_ROOT}/${MQTT_WATER}/${MSG_STATUS}`,
+    // TPMS: wheel/<0-3>, summary, config, pairing/<0-3>, candidate (decoded by CAN bridge)
+    TPMS_ALL: `${MQTT_ROOT}/${MQTT_TPMS}/#`,
     LEVEL_TILT: `${MQTT_ROOT}/${MQTT_LEVEL}/tilt`,
     LEVEL_STATUS: `${MQTT_ROOT}/${MQTT_LEVEL}/${MSG_STATUS}`,
     CLOUD_CONFIG_CHANGED: 'local/config/cloud_updated',
@@ -117,6 +120,10 @@ class MqttService {
         // Last observed IANA TZ from retained os/timezone/current. Null
         // until the host-side os-settings.py daemon has published.
         this.currentTimezone = null;
+        // Last TPMS state decoded from CAN (per wheel, summary, limits, pairing)
+        // so the Tires page can render at once instead of waiting for the
+        // module's next 1 s / 5 s broadcast. Never persisted: the module owns it.
+        this.tpmsState = { wheels: {}, summary: null, config: null, pairing: {} };
     }
 
     connect(db, broadcast) {
@@ -281,6 +288,15 @@ class MqttService {
                 console.error('Failed to subscribe to water status:', err);
             } else {
                 console.log('Subscribed to water status topic');
+            }
+        });
+
+        // Subscribe to TPMS topics (tire pressure module)
+        this.client.subscribe(TOPICS.TPMS_ALL, (err) => {
+            if (err) {
+                console.error('Failed to subscribe to TPMS topics:', err);
+            } else {
+                console.log('Subscribed to TPMS topics');
             }
         });
 
@@ -504,6 +520,8 @@ class MqttService {
                 this.handleGpsTime(payload);
             } else if (parts[1] === MQTT_WATER && parts[2] === MSG_STATUS) {
                 this.handleWaterStatus(payload);
+            } else if (parts[1] === MQTT_TPMS) {
+                this.handleTpms(parts[2], payload);
             } else if (parts[1] === MQTT_LEVEL && parts[2] === 'tilt') {
                 this.handleLevelTilt(payload);
             } else if (parts[1] === MQTT_LEVEL && parts[2] === MSG_STATUS) {
@@ -864,6 +882,26 @@ class MqttService {
     handleWaterStatus(payload) {
         if (this.broadcast) {
             this.broadcast('water', payload);
+        }
+    }
+
+    // Handle TPMS frames (CAN 0x46-0x4B decoded by CAN bridge). Broadcast as
+    // tpms_wheel / tpms_summary / tpms_config / tpms_pairing / tpms_candidate.
+    handleTpms(kind, payload) {
+        if (!payload || typeof payload !== 'object') return;
+        if (kind === 'wheel' && payload.wheel !== undefined) {
+            this.tpmsState.wheels[payload.wheel] = payload;
+        } else if (kind === 'summary') {
+            this.tpmsState.summary = payload;
+        } else if (kind === 'config') {
+            this.tpmsState.config = payload;
+        } else if (kind === 'pairing' && payload.wheel !== undefined) {
+            this.tpmsState.pairing[payload.wheel] = payload;
+        } else if (kind !== 'candidate') {
+            return;
+        }
+        if (this.broadcast) {
+            this.broadcast(`tpms_${kind}`, payload);
         }
     }
 
@@ -1251,6 +1289,21 @@ class MqttService {
 
         console.log('[Plateau] Sending calibration save command');
         return this.publishCanMessage(0x36, [0x03]);
+    }
+
+    /**
+     * Send a TpmsCommand to the TPMS module (CAN ID 0x49). The module owns its
+     * settings: it validates, clamps, saves and re-broadcasts the result on
+     * 0x48 (limits) / 0x4A (pairing), so the UI shows those, not what it sent.
+     * @param {number[]} dataBytes - [command, arg, ...] per TrailCurrent.dbc
+     */
+    publishTpmsCommand(dataBytes) {
+        if (!this.connected) {
+            console.warn('MQTT not connected, cannot publish TPMS command');
+            return false;
+        }
+        console.log(`[TPMS] Sending command ${dataBytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+        return this.publishCanMessage(0x49, dataBytes);
     }
 
     /**

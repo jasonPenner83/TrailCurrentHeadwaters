@@ -18,6 +18,9 @@ const MCU_MODULES = [
     { id: 'reservoir', name: 'Reservoir' },
     { id: 'borealis', name: 'Borealis' },
     { id: 'aftline', name: 'Aftline' },
+    // TPMS reads BLE valve-cap tire sensors and reports per-wheel pressure,
+    // temperature and alarms on CAN 0x46-0x4B (IDs provisional, see the DBC).
+    { id: 'tpms', name: 'TPMS' },
     { id: 'plateau', name: 'Plateau' },
     { id: 'picket', name: 'Picket' },
     { id: 'bearing', name: 'Bearing' },

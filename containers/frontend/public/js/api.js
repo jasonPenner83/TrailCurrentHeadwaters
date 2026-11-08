@@ -344,6 +344,40 @@ class API {
         return this.request('/plateau/save-calibration', { method: 'POST' });
     }
 
+    // TPMS (tire pressure module) — readings stream over WebSocket; these
+    // send TpmsCommand. The module confirms on tpms_config / tpms_pairing.
+    static async getTpms() {
+        return this.request('/tpms');
+    }
+
+    static async tpmsSetLimit(field, value) {
+        return this.request('/tpms/limit', { method: 'POST', body: JSON.stringify({ field, value }) });
+    }
+
+    static async tpmsPair(wheel, address) {
+        return this.request('/tpms/pair', { method: 'POST', body: JSON.stringify({ wheel, address }) });
+    }
+
+    static async tpmsUnpair(wheel) {
+        return this.request('/tpms/unpair', { method: 'POST', body: JSON.stringify({ wheel }) });
+    }
+
+    static async tpmsLearn(seconds) {
+        return this.request('/tpms/learn', { method: 'POST', body: JSON.stringify({ seconds }) });
+    }
+
+    static async tpmsLearnStop() {
+        return this.request('/tpms/learn/stop', { method: 'POST' });
+    }
+
+    static async tpmsResetLimits() {
+        return this.request('/tpms/reset-limits', { method: 'POST' });
+    }
+
+    static async tpmsRequest() {
+        return this.request('/tpms/request', { method: 'POST' });
+    }
+
     // SMS test
     static async testSms(phone_number, router_ip, ssh_key) {
         return this.request('/sms/test', {

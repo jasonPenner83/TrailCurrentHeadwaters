@@ -10984,3 +10984,104 @@ input[type="range"] {
 .monitor-retry-btn:hover {
     background: var(--primary-hover);
 }
+
+/* ============================================================
+   Tires (TPMS module)
+   ============================================================ */
+.tpms-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.tpms-summary-word { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+.tpms-summary-target { color: var(--text-muted); font-size: 0.875rem; }
+.tpms-summary.ok { border-color: var(--role-primary); }
+.tpms-summary.ok .tpms-summary-word { color: var(--role-primary); }
+.tpms-summary.warning { border-color: var(--warning); }
+.tpms-summary.warning .tpms-summary-word { color: var(--warning); }
+.tpms-summary.critical { border-color: var(--danger); background: var(--danger-bg-subtle); }
+.tpms-summary.critical .tpms-summary-word { color: var(--danger); }
+
+.tpms-axle-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 4px 0 8px;
+}
+.tpms-axle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.tpms-wheel { text-align: center; border-width: 2px; }
+.tpms-wheel.ok { border-color: var(--role-primary); }
+.tpms-wheel.warning { border-color: var(--warning); }
+.tpms-wheel.critical { border-color: var(--danger); background: var(--danger-bg-subtle); }
+.tpms-wheel.unpaired { border-style: dashed; opacity: 0.7; }
+.tpms-wheel-name { color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; }
+.tpms-wheel-psi { font-size: 2.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+.tpms-wheel-psi span { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
+.tpms-wheel-meta { color: var(--text-muted); font-size: 0.875rem; margin: 6px 0; }
+.tpms-wheel-status { font-weight: 600; font-size: 0.875rem; color: var(--text-secondary); }
+.tpms-wheel.ok .tpms-wheel-status { color: var(--role-primary); }
+.tpms-wheel.warning .tpms-wheel-status { color: var(--warning); }
+.tpms-wheel.critical .tpms-wheel-status { color: var(--danger); }
+.tpms-wheel-seen { color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; }
+
+.tpms-subtitle { font-size: 1.125rem; margin-top: 12px; }
+.tpms-note { color: var(--text-muted); font-size: 0.875rem; margin: 0 0 12px; }
+.tpms-limits { display: grid; gap: 8px; }
+.tpms-limit-row {
+    display: grid;
+    grid-template-columns: 1fr 96px 40px;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+}
+.tpms-limit-input { text-align: right; padding: 6px 10px; }
+.tpms-limit-unit { color: var(--text-muted); font-size: 0.8125rem; }
+
+.tpms-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.tpms-status { color: var(--text-muted); font-size: 0.875rem; }
+.tpms-btn {
+    background: var(--role-primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.tpms-btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+.tpms-pair-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) minmax(150px, 1.4fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.tpms-pair-row:last-child { border-bottom: none; }
+.tpms-pair-wheel { color: var(--text-secondary); font-weight: 600; }
+.tpms-pair-addr { font-family: ui-monospace, monospace; font-size: 0.875rem; color: var(--text-primary); }
+.tpms-cand-meta { color: var(--text-muted); font-size: 0.875rem; }
+.tpms-cand-pair { display: flex; gap: 8px; align-items: center; }
+.tpms-cand-pair select { padding: 6px 8px; width: auto; }
+
+@media (max-width: 480px) {
+    .tpms-axle { gap: 10px; }
+    .tpms-wheel-psi { font-size: 1.75rem; }
+    .tpms-pair-row { grid-template-columns: 1fr auto; }
+    .tpms-pair-row > .tpms-pair-wheel,
+    .tpms-pair-row > .tpms-pair-addr { grid-column: 1; }
+    .tpms-pair-row > button { grid-column: 2; grid-row: 1 / span 2; }
+    .tpms-cand-pair { grid-column: 1 / -1; }
+}
