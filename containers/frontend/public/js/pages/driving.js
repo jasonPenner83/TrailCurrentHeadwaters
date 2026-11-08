@@ -7,6 +7,7 @@
 // Data sources:
 //   * `energy` WS → battery %, voltage, solar watts, time remaining, charge
 //   * `gnss_details` / `latlon` WS → speed, heading, elevation, satellites
+//   * `tpms_wheel` WS → trailer tire pressures (TPMS module)
 //   * `aftline_tire` / `aftline_breakaway` / `aftline_blindspot` /
 //     `aftline_lights` / `aftline_link` WS → trailer sensing (Aftline
 //      hardware pending; UI renders "--" placeholders until data arrives)
@@ -277,6 +278,13 @@ export const drivingPage = {
         onWs('aftline_tire', (data) => {
             if (!data || !data.tires) return;
             state.aftline.tires = { ...state.aftline.tires, ...data.tires };
+            repaint();
+        });
+        // TPMS module: one tpms_wheel per wheel per second, keyed by the
+        // same "<axle><L|R>" slot the trailer diagram uses.
+        onWs('tpms_wheel', (data) => {
+            if (!data || !data.position) return;
+            state.aftline.tires = { ...state.aftline.tires, [data.position]: data.psi };
             repaint();
         });
         onWs('aftline_breakaway', (data) => {

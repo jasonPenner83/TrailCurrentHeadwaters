@@ -23,6 +23,11 @@ export const PRIMARY_ITEMS = [
         svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>'
     },
     {
+        page: 'tires',
+        label: 'Tires',
+        svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="3" x2="12" y2="8"></line><line x1="12" y1="16" x2="12" y2="21"></line><line x1="3" y1="12" x2="8" y2="12"></line><line x1="16" y1="12" x2="21" y2="12"></line></svg>'
+    },
+    {
         page: 'airquality',
         label: 'Air',
         svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg>'
@@ -72,10 +77,10 @@ export const SYSTEM_ITEMS = [
 // sidebar carries every primary item (there's vertical room); the bottom
 // nav keeps the six most-frequently-used ones and pushes the rest into
 // the More menu alongside the System items.
-const BOTTOM_NAV_OVERFLOW_PAGES = new Set(['trails', 'monitoring']);
+const BOTTOM_NAV_OVERFLOW_PAGES = new Set(['tires', 'trails', 'monitoring']);
 export const BOTTOM_NAV_PRIMARY = PRIMARY_ITEMS.filter(it => !BOTTOM_NAV_OVERFLOW_PAGES.has(it.page));
 
-// Trails and Monitor ride in the More menu on narrow screens. Ordered
+// Tires, Trails and Monitor ride in the More menu on narrow screens. Ordered
 // above System items so they stay adjacent to the primary group they
 // belong to.
 export const BOTTOM_NAV_OVERFLOW = [
